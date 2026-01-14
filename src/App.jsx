@@ -3,7 +3,10 @@ import "./App.css";
 import PixelGrid from "./PixelGrid";
 import Toolbar from "./Toolbar";
 
-const API_URL = "http://localhost:3000";
+const API_URL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:3000"
+    : null;
 
 function App() {
   const [grid, setGrid] = useState([]);
@@ -11,17 +14,33 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_URL}/grid`)
-      .then((response) => response.json())
-      .then((data) => {
-        setGrid(data.grid);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching grid:", error);
-        setLoading(false);
-      });
-  }, []);
+  // Cas GitHub Pages : pas de back-end
+  if (!API_URL) {
+    const emptyGrid = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        emptyGrid.push({ x, y, color: "#FFFFFF" });
+      }
+    }
+    setGrid(emptyGrid);
+    setLoading(false);
+    return;
+  }
+
+  // Cas développement local avec back-end
+  fetch(`${API_URL}/grid`)
+    .then((response) => response.json())
+    .then((data) => {
+      setGrid(data.grid);
+      setLoading(false);
+    })
+    .catch((error) => {
+      console.error("Error fetching grid:", error);
+      setLoading(false);
+    });
+}, []);
+
+
 
  const updateColor = async (x, y) => {
   try {
